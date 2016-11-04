@@ -1,0 +1,39 @@
+{
+  "name": "tankgame",
+  "version": "1.0.0",
+  "description": "tank game build with p5.js",
+  "main": "index.js",
+  "scripts": {
+      "start": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lokialone/tankgame.git"
+  },
+  "keywords": [
+    "p5.js"
+  ],
+  "author": "lokialone",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lokialone/tankgame/issues"
+  },
+  "homepage": "https://github.com/lokialone/tankgame#readme",
+  "devDependencies": {
+    "babel-core": "^6.14.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.14.0",
+    "clean-webpack-plugin": "^0.1.10",
+    "file-loader": "^0.9.0",
+    "html-webpack-plugin": "^2.22.0",
+    "script-loader": "^0.7.0",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.13.1",
+    "webpack-merge": "^0.14.1",
+    "webpack-validator": "^2.2.7"
+  },
+  "dependencies": {
+    "p5": "^0.5.2",
+    "url-loader": "^0.5.7"
+  }
+}
