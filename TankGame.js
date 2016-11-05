@@ -311,6 +311,7 @@ var TankGame = function(p){
   var scoreSound;
   var lives;
   var restartButton;
+  var start = true;
 
   p.preload = function(){
     heart = p.loadImage(require('./img/heart.png'));
@@ -331,25 +332,32 @@ var TankGame = function(p){
       enemyTank[i].initBullets();
     }
   }
-  p.draw = function() {
-    p.background(224);
+    p.draw = function() {
+      if(start){
+        p.background(224);
 
-    // 控制tank的方向
-    controlTankDirection(p);
-    tank.render(p);
+        // 控制tank的方向
+        controlTankDirection(p);
+        tank.render(p);
 
-    // render enemytank
-    for(var i = 0; i < enemyTank.length;i++){
-      enemyTank[i].bulletsRender(p);
-      enemyTank[i].autoMove(p);
+        // render enemytank
+        for(var i = 0; i < enemyTank.length;i++){
+          enemyTank[i].bulletsRender(p);
+          enemyTank[i].autoMove(p);
+        }
+        showScore(score);
+        showlives(lives);
+        addEnemyTank();
+        enemyTankGetShoted();
+        tankGetScore();
+        tankGetShoted();
+      }else{
+        p.clear();
+        p.textSize(36);
+        p.text("Your Score is: " + score, p.width/2, p.height/2);
+      }
     }
-    showScore(score);
-    showlives(lives);
-    addEnemyTank();
-    enemyTankGetShoted();
-    tankGetScore();
-    tankGetShoted();
-    }
+
   p.keyPressed = function() {
     if(p.keyCode === p.CONTROL){
       tank.slotBullet();
@@ -390,10 +398,7 @@ var TankGame = function(p){
         p.image(heart, 730, 30);
         break;
       case 0:
-        p.clear();
-        p.textSize(36);
-        p.text("Your Score is: " + score, p.width/2, p.height/2);
-        return;
+        start = false;
       break;
     }
   }
