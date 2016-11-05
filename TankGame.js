@@ -1,3 +1,4 @@
+var Util = require('./util');
 
 var Direction = {
   UP: 0,
@@ -56,11 +57,17 @@ Bullet.prototype.update = function(p){
     }
 }
 
-Bullet.prototype.checkEdges = function(edge,location,direction){
-  if(this.x >= edge.x || this.x <= 0 || this.y >= edge.y || this.y <= 0){
-      this.setLocation(location.x,location.y);
-      this.setDirection(direction);
+Bullet.prototype.checkEdges = function(edge_x,edge_y,x,y,direction){
+  if(this.x >= edge_x || this.x <= 0 || this.y >= edge_y || this.y <= 0){
+      this.init(x,y,direction);
   }
+}
+
+Bullet.prototype.checkShot = function(x,y,range,p){
+  if(p.dist(this.x,this.y,x,y) <= range){
+    return true;
+  }
+  return false;
 }
 
 var Tank = function(){
@@ -89,13 +96,9 @@ var Tank = function(){
   this.blood = 3;
 }
 
-Tank.prototype.setCenter =  function(x,y){
+Tank.prototype.setLocation =  function(x,y){
   this.x = x;
   this.y = y;
-}
-
-Tank.prototype.getShot =  function(){
-
 }
 
 Tank.prototype.updateCenter = function(x,y){
@@ -135,7 +138,6 @@ Tank.prototype.goDown = function() {
 
 Tank.prototype.slotBullet = function() {
   this.bullets.push(new Bullet(this.x,this.y,this.direction));
-
 }
 
 Tank.prototype.render = function(p) {
@@ -173,7 +175,7 @@ var EnemyTank = function(min,x_max,y_max) {
   this.bullet = '';
   this.bulletsDistance = 60;
   this.bulletsCount = 5;
-  this.dirs=['UP','DOWN','LEFT','RIGHT'];
+  this.color = 'hsba(160, 100%, 50%, 0.5)';
 }
 
 EnemyTank.prototype = new Tank();
@@ -194,10 +196,22 @@ EnemyTank.prototype.setLocationAndDirection = function(x,y,direction){
   this.setLocation(x,y);
   this.setDirection(direction);
 }
-EnemyTank.prototype.createRandom = function(){
-  this.setLocationAndDirection()
+
+EnemyTank.prototype.createRandom = function(x,y){
+  var dir = this.getRandomDirection();
+  this.setLocationAndDirection(x,y,dir);
+}
+
+EnemyTank.prototype.getRandomDirection = function() {
+  var dirs = [];
+  for(var key in Direction){
+    dirs.push(key);
+  }
+  var i = Math.floor(Util.randomRange(0,dirs.length));
+  return Direction[dirs[i]];
 
 }
+
 EnemyTank.prototype.isEdges =  function() {
   if(this.x <= this.edge_min || this.x >= this.edge_x_max || this.y <=this.edge_min || this.y >=this.edge_y_max ){
     return true;
@@ -205,6 +219,33 @@ EnemyTank.prototype.isEdges =  function() {
   return false;
 }
 
+EnemyTank.prototype.render = function(p){
+  // render bullets
+  for(var i = 0; i < this.bullets.length; i++){
+    this.bullets[i].render(p);
+    this.bullets[i].update(p);
+  }
+
+  p.push();
+  // 坦克的body
+
+  p.fill(p.color(this.color));
+
+  p.translate(this.x, this.y);
+  p.rotate(this.direction);
+
+  p.rect(-this.tankWidth / 2, -this.tankHeight / 2, this.tankWidth, this.tankHeight,this.borderRadius);
+  //坦克的炮台
+
+  p.rect(- this.gunturretWidth / 2 , - this.gunturretHeight / 2, this.gunturretWidth, this.gunturretHeight,this.borderRadius);
+  // 坦克的大炮
+  p.rect( - this.cannonDiameter / 2,  - this.gunturretHeight / 2 - this.cannonHeight,this.cannonDiameter,this.cannonHeight);
+  p.pop();
+}
+
+EnemyTank.prototype.setColor = function(color){
+  this.color = color;
+}
 EnemyTank.prototype.goForward = function(rate) {
     if(arguments.length === 0){
       var rate = 1;
@@ -245,7 +286,7 @@ EnemyTank.prototype.findDirection = function() {
 
 }
 
-EnemyTank.prototype.initBullets = function() {
+EnemyTank.prototype.initBullets = function(dir) {
   // this.bullets.push(new Bullet(this.x,this.y,this.direction));
   this.bullet = new Bullet(this.x,this.y,this.direction);
 }
@@ -261,11 +302,10 @@ EnemyTank.prototype.bulletsRender = function(p){
 }
 
 var TankGame = function(p){
-
   const EDGE_MIN = 40;
   var tank ='';
   var enemyTank = [];
-  var enemyTankCounts = 5;
+  var enemyTankCounts = 10;
   var score = 0;
   var heart;
   var scoreSound;
@@ -283,12 +323,11 @@ var TankGame = function(p){
     p.background(224);
     p.fill(255,204,0);
     tank = new Tank();
-    tank.setCenter(p.width / 2, p.height - 60);
+    tank.setLocation(p.width / 2, p.height - 60);
 
     for(var i = 0; i < enemyTankCounts;i++){
       enemyTank[i] = new EnemyTank(EDGE_MIN,p.width-EDGE_MIN,p.height-EDGE_MIN);
-      enemyTank[i].setCenter(enemyTank[i].x,enemyTank[i].y);
-      enemyTank[i].setDirection(Direction.DOWN);
+      enemyTank[i].createRandom(Util.randomRange(EDGE_MIN,p.width),Util.randomRange(EDGE_MIN,p.height-EDGE_MIN));
       enemyTank[i].initBullets();
     }
   }
@@ -304,45 +343,13 @@ var TankGame = function(p){
       enemyTank[i].bulletsRender(p);
       enemyTank[i].autoMove(p);
     }
-    //
     showScore(score);
     showlives(lives);
-
-    // 判断子弹击中enemyTank
-    for(var i = 0; i < tank.bullets.length; i++){
-      for(var j= 0; j < enemyTank.length;j++){
-        if(p.dist(tank.bullets[i].x, tank.bullets[i].y, enemyTank[j].x, enemyTank[j].y) <=tank.tankWidth/2){
-          score++;
-          // scoreSound.play();
-          enemyTank.splice(j,1);
-
-        }
-      }
+    addEnemyTank();
+    enemyTankGetShoted();
+    tankGetScore();
+    tankGetShoted();
     }
-    if (enemyTank.length < 3) {
-      enemyTank.push(new EnemyTank(EDGE_MIN,p.width-EDGE_MIN,p.height-EDGE_MIN));
-      enemyTank[enemyTank.length - 1].setCenter(p.random(EDGE_MIN,p.width-EDGE_MIN),p.random(EDGE_MIN,p.height-EDGE_MIN));
-      enemyTank[enemyTank.length - 1].setDirection(Direction.UP);
-
-      enemyTank[enemyTank.length - 1].initBullets();
-    }
-
-    for(var i = 0; i < tank.bullets.length;i++){
-      if(tank.bullets[i].x <= 0 || tank.bullets[i].y <=0 || tank.bullets[i].x >= p.width || tank.bullets[i] <= p.height ){
-        tank.bullets.splice(i,1);
-      }
-    }
-
-    // 判断tank是否被击中
-    for(var i = enemyTank.length-1; i >=0; i--){
-      if(p.dist(enemyTank[i].bullet.x,enemyTank[i].bullet.y,tank.x,tank.y) <= tank.tankWidth/2){
-        lives--;
-        enemyTank[i].bullet.init(enemyTank[i].x,enemyTank[i].y,enemyTank[i].direction);
-      }
-    }
-  }
-
-
   p.keyPressed = function() {
     if(p.keyCode === p.CONTROL){
       tank.slotBullet();
@@ -363,12 +370,10 @@ var TankGame = function(p){
       tank.goRight();
     }
   }
-
   function showScore(score) {
     p.textSize(24);
     p.text("Score: " + score, 30, 50);
   }
-
   function showlives(lives){
     switch(lives)
     {
@@ -392,10 +397,42 @@ var TankGame = function(p){
       break;
     }
   }
+  function renderEnemyTank() {
+  }
 
-  function renderEnemyTank(){
-
+  function enemyTankGetShoted(){
+    // 判断子弹击中enemyTank
+    for(var i = 0; i < tank.bullets.length; i++){
+      for(var j= 0; j < enemyTank.length;j++){
+        if(tank.bullets[i].checkShot(enemyTank[j].x,enemyTank[j].y,tank.tankWidth/2,p)){
+          score++;
+          enemyTank.splice(j,1);
+        }
+      }
+    }
+  }
+  function tankGetScore(){
+    for(var i = 0; i < tank.bullets.length;i++){
+      if(tank.bullets[i].x <= 0 || tank.bullets[i].y <=0 || tank.bullets[i].x >= p.width || tank.bullets[i] <= p.height ){
+        tank.bullets.splice(i,1);
+      }
+    }
+  }
+  function tankGetShoted(){
+    // 判断tank是否被击中
+    for(var i = enemyTank.length-1; i >=0; i--){
+      if(p.dist(enemyTank[i].bullet.x,enemyTank[i].bullet.y,tank.x,tank.y) <= tank.tankWidth/2){
+        lives--;
+        enemyTank[i].bullet.init(enemyTank[i].x,enemyTank[i].y,enemyTank[i].direction);
+      }
+    }
+  }
+  function addEnemyTank() {
+    if (enemyTank.length < enemyTankCounts) {
+      enemyTank.push(new EnemyTank(EDGE_MIN,p.width-EDGE_MIN,p.height-EDGE_MIN));
+      enemyTank[enemyTank.length - 1].createRandom(Util.randomRange(EDGE_MIN,p.width),Util.randomRange(EDGE_MIN,p.height-EDGE_MIN));
+      enemyTank[enemyTank.length - 1].initBullets();
+    }
   }
 }
-
 module.exports = TankGame;
