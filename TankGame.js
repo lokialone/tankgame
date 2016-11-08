@@ -141,7 +141,7 @@ Tank.prototype.slotBullet = function() {
 }
 
 Tank.prototype.checkCollision = function(x,y,p){
-  if(p.dist(this.x,this.y,x,y) <= this.tankWidth){
+  if(p.dist(this.x,this.y,x,y) <= Math.sqrt(2 * this.tankWidth * this.tankWidth)){
     return true;
   }
   return false;
@@ -290,8 +290,10 @@ EnemyTank.prototype.findDirection = function() {
         }
         this.goForward(-1);
       }
+}
 
-
+EnemyTank.prototype.changeDirctionWhenCollision = function() {
+    this.setDirection(this.direction + Math.PI);
 }
 
 EnemyTank.prototype.initBullets = function(dir) {
@@ -359,6 +361,7 @@ var TankGame = function(p){
         enemyTankGetShoted();
         tankGetScore();
         tankGetShoted();
+        // enemyTanksgetCollisioned();
       }else{
         p.clear();
         p.textSize(36);
@@ -447,12 +450,13 @@ var TankGame = function(p){
       enemyTank[enemyTank.length - 1].initBullets();
     }
   }
-  
+
   function enemyTanksgetCollisioned(){
     for(var i = 0,len = enemyTank.length; i < len; i++){
       for(var j= i+1; j < len;j++){
         if(enemyTank[i].checkCollision(enemyTank[j].x,enemyTank[j].y,p)){
-            enemyTank[i].findDirection();
+
+            enemyTank[i].changeDirctionWhenCollision();
         }
       }
     }
