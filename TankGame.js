@@ -140,6 +140,13 @@ Tank.prototype.slotBullet = function() {
   this.bullets.push(new Bullet(this.x,this.y,this.direction));
 }
 
+Tank.prototype.checkCollision = function(x,y,p){
+  if(p.dist(this.x,this.y,x,y) <= this.tankWidth){
+    return true;
+  }
+  return false;
+}
+
 Tank.prototype.render = function(p) {
 
   // render bullets
@@ -191,6 +198,7 @@ EnemyTank.prototype.autoUpdate = function(p){
       this.findDirection();
     }
 }
+
 
 EnemyTank.prototype.setLocationAndDirection = function(x,y,direction){
   this.setLocation(x,y);
@@ -437,6 +445,16 @@ var TankGame = function(p){
       enemyTank.push(new EnemyTank(EDGE_MIN,p.width-EDGE_MIN,p.height-EDGE_MIN));
       enemyTank[enemyTank.length - 1].createRandom(Util.randomRange(EDGE_MIN,p.width),Util.randomRange(EDGE_MIN,p.height-EDGE_MIN));
       enemyTank[enemyTank.length - 1].initBullets();
+    }
+  }
+  
+  function enemyTanksgetCollisioned(){
+    for(var i = 0,len = enemyTank.length; i < len; i++){
+      for(var j= i+1; j < len;j++){
+        if(enemyTank[i].checkCollision(enemyTank[j].x,enemyTank[j].y,p)){
+            enemyTank[i].findDirection();
+        }
+      }
     }
   }
 }
