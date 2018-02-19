@@ -1,4 +1,6 @@
 import p5 from 'p5';
 import tankGame from './tank-game.js'
 
-new p5(tankGame);
+let test = new p5(tankGame);
+console.log('test', test);
+

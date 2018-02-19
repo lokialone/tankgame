@@ -97,4 +97,6 @@ class Tank {
     }
 }
 
+export default Tank;
+
   

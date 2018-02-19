@@ -33122,8 +33122,6 @@ const Direction = exports.Direction = {
   DOWN: Math.PI,
   LEFT: Math.PI * 3 / 2
 };
-},{}],9:[function(require,module,exports) {
-module.exports="/814d777ba81a03616606dcb25f80792b.png";
 },{}],16:[function(require,module,exports) {
 "use strict";
 
@@ -33194,8 +33192,273 @@ class Bullet {
 }
 
 exports.default = Bullet;
-},{"./const.js":15}],14:[function(require,module,exports) {
+},{"./const.js":15}],17:[function(require,module,exports) {
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _bullet = require("./bullet.js");
+
+var _bullet2 = _interopRequireDefault(_bullet);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Tank {
+  constructor() {
+    this.tankWidth = 50;
+    this.tankHeight = 50;
+
+    this.gunturretWidth = 30;
+    this.gunturretHeight = 20;
+
+    this.cannonHeight = 30;
+    this.cannonDiameter = 6;
+
+    // tank的圆角
+    this.borderRadius = 5;
+    this.slotBulletFlag = true;
+    this.margin = 5;
+    // tank的重心坐标
+    this.x = 0;
+    this.y = 0;
+
+    this.direction = 0;
+    this.speed = 2;
+
+    this.bullets = [];
+    this.blood = 3;
+  }
+
+  setLocation(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  updateCenter(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  rotate(deg) {
+    this.direction = deg;
+  }
+
+  setDirection(direction) {
+    if (this.direction !== direction) {
+      this.rotate(direction);
+    }
+  }
+  goLeft() {
+    this.setDirection(Direction.LEFT);
+    this.x -= this.speed;
+  }
+
+  goRight() {
+    this.setDirection(Direction.RIGHT);
+    this.x += this.speed;
+  }
+
+  goUp() {
+    this.setDirection(Direction.UP);
+    this.y -= this.speed;
+  }
+  goDown() {
+    this.setDirection(Direction.DOWN);
+    this.y += this.speed;
+  }
+  slotBullet() {
+    this.bullets.push(new _bullet2.default(this.x, this.y, this.direction));
+  }
+  checkCollision() {
+    if (p.dist(this.x, this.y, x, y) <= Math.sqrt(2 * this.tankWidth * this.tankWidth)) {
+      return true;
+    }
+    return false;
+  }
+  render(p) {
+    // render bullets
+    for (var i = 0; i < this.bullets.length; i++) {
+      this.bullets[i].render(p);
+      this.bullets[i].update(p);
+    }
+
+    p.push();
+    // 坦克的body
+    p.translate(this.x, this.y);
+    p.rotate(this.direction);
+    p.fill(255, 204, 0);
+    p.rect(-this.tankWidth / 2, -this.tankHeight / 2, this.tankWidth, this.tankHeight, this.borderRadius);
+    //坦克的炮台
+    p.fill(153, 204, 0);
+    p.rect(-this.gunturretWidth / 2, -this.gunturretHeight / 2, this.gunturretWidth, this.gunturretHeight, this.borderRadius);
+    // 坦克的大炮
+    p.fill(255, 255, 255);
+    p.rect(-this.cannonDiameter / 2, -this.gunturretHeight / 2 - this.cannonHeight, this.cannonDiameter, this.cannonHeight);
+
+    p.pop();
+  }
+}
+
+exports.default = Tank;
+},{"./bullet.js":16}],18:[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _tank = require("./tank.js");
+
+var _tank2 = _interopRequireDefault(_tank);
+
+var _util = require("./util.js");
+
+var _util2 = _interopRequireDefault(_util);
+
+var _bullet = require("./bullet.js");
+
+var _bullet2 = _interopRequireDefault(_bullet);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class NpcTank extends _tank2.default {
+  constructor(min, x_max, y_max) {
+    super();
+    this.edge_min = min;
+    this.edge_x_max = x_max;
+    this.edge_y_max = y_max;
+    this.speed = 1;
+    this.bullet = '';
+    this.bulletsDistance = 60;
+    this.bulletsCount = 5;
+    this.color = 'hsba(160, 100%, 50%, 0.5)';
+  }
+
+  autoMove(p) {
+    this.render(p);
+    this.autoUpdate(p);
+  }
+  autoUpdate(p) {
+    this.goForward();
+    if (this.isEdges()) {
+      this.findDirection();
+    }
+  }
+  setLocationAndDirection(x, y, direction) {
+    this.setLocation(x, y);
+    this.setDirection(direction);
+  }
+
+  getRandomDirection() {
+    var dirs = [];
+    for (var key in Direction) {
+      dirs.push(key);
+    }
+    var i = Math.floor(_util2.default.randomRange(0, dirs.length));
+    return Direction[dirs[i]];
+  }
+
+  createRandom(x, y) {
+    var dir = this.getRandomDirection();
+    this.setLocationAndDirection(x, y, dir);
+  }
+
+  isEdges() {
+    if (this.x <= this.edge_min || this.x >= this.edge_x_max || this.y <= this.edge_min || this.y >= this.edge_y_max) {
+      return true;
+    }
+    return false;
+  }
+
+  render(p) {
+    // render bullets
+    for (var i = 0; i < this.bullets.length; i++) {
+      this.bullets[i].render(p);
+      this.bullets[i].update(p);
+    }
+
+    p.push();
+    // 坦克的body
+
+    p.fill(p.color(this.color));
+
+    p.translate(this.x, this.y);
+    p.rotate(this.direction);
+
+    p.rect(-this.tankWidth / 2, -this.tankHeight / 2, this.tankWidth, this.tankHeight, this.borderRadius);
+    //坦克的炮台
+
+    p.rect(-this.gunturretWidth / 2, -this.gunturretHeight / 2, this.gunturretWidth, this.gunturretHeight, this.borderRadius);
+    // 坦克的大炮
+    p.rect(-this.cannonDiameter / 2, -this.gunturretHeight / 2 - this.cannonHeight, this.cannonDiameter, this.cannonHeight);
+    p.pop();
+  }
+
+  setColor(color) {
+    this.color = color;
+  }
+
+  goForward(rate = 1) {
+    switch (this.direction) {
+      case Direction.UP:
+        this.y -= this.speed * rate;
+        break;
+      case Direction.DOWN:
+        this.y += this.speed * rate;
+        break;
+      case Direction.LEFT:
+        this.x -= this.speed * rate;
+        break;
+      case Direction.RIGHT:
+        this.x += this.speed * rate;
+        break;
+      default:
+        this.y += this.speed * rate;
+    }
+  }
+
+  findDirection() {
+    for (var dir in Direction) {
+      if (this.direction === Direction[dir]) continue;
+      this.setDirection(Direction[dir]);
+      this.goForward();
+      if (!this.isEdges()) {
+        this.goForward(-1);
+        break;
+      }
+      this.goForward(-1);
+    }
+  }
+
+  changeDirctionWhenCollision() {
+    this.setDirection(this.direction + Math.PI);
+  }
+
+  initBullets(dir) {
+    this.bullet = new _bullet2.default(this.x, this.y, this.direction);
+  }
+
+  bulletsRender(p) {
+    this.bullet.render(p);
+    if (this.bullet.x <= 0 || this.bullet.x >= this.edge_x_max || this.bullet.y >= this.edge_y_max || this.bullet.y <= 0) {
+      this.bullet.setLocation(this.x, this.y);
+      this.bullet.setDirection(this.direction);
+    }
+    this.bullet.update();
+  }
+}
+
+exports.default = NpcTank;
+},{"./tank.js":17,"./util.js":8,"./bullet.js":16}],9:[function(require,module,exports) {
+module.exports="/814d777ba81a03616606dcb25f80792b.png";
+},{}],14:[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _util = require("./util.js");
 
@@ -33207,242 +33470,15 @@ var _bullet = require("./bullet.js");
 
 var _bullet2 = _interopRequireDefault(_bullet);
 
+var _tank = require("./tank.js");
+
+var _tank2 = _interopRequireDefault(_tank);
+
+var _npcTank = require("./npc-tank.js");
+
+var _npcTank2 = _interopRequireDefault(_npcTank);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var Tank = function () {
-
-  this.tankWidth = 50;
-  this.tankHeight = 50;
-
-  this.gunturretWidth = 30;
-  this.gunturretHeight = 20;
-
-  this.cannonHeight = 30;
-  this.cannonDiameter = 6;
-
-  // tank的圆角
-  this.borderRadius = 5;
-  this.slotBulletFlag = true;
-  this.margin = 5;
-  // tank的重心坐标
-  this.x = 0;
-  this.y = 0;
-
-  this.direction = 0;
-  this.speed = 2;
-
-  this.bullets = [];
-  this.blood = 3;
-};
-
-Tank.prototype.setLocation = function (x, y) {
-  this.x = x;
-  this.y = y;
-};
-
-Tank.prototype.updateCenter = function (x, y) {
-  this.x = x;
-  this.y = y;
-};
-
-Tank.prototype.rotate = function (deg) {
-  this.direction = deg;
-};
-
-Tank.prototype.setDirection = function (direction) {
-  if (this.direction !== direction) {
-    this.rotate(direction);
-  }
-};
-
-Tank.prototype.goLeft = function () {
-  this.setDirection(_const.Direction.LEFT);
-  this.x -= this.speed;
-};
-
-Tank.prototype.goRight = function () {
-  this.setDirection(_const.Direction.RIGHT);
-  this.x += this.speed;
-};
-
-Tank.prototype.goUp = function () {
-  this.setDirection(_const.Direction.UP);
-  this.y -= this.speed;
-};
-
-Tank.prototype.goDown = function () {
-  this.setDirection(_const.Direction.DOWN);
-  this.y += this.speed;
-};
-
-Tank.prototype.slotBullet = function () {
-  this.bullets.push(new _bullet2.default(this.x, this.y, this.direction));
-};
-
-Tank.prototype.checkCollision = function (x, y, p) {
-  if (p.dist(this.x, this.y, x, y) <= Math.sqrt(2 * this.tankWidth * this.tankWidth)) {
-    return true;
-  }
-  return false;
-};
-
-Tank.prototype.render = function (p) {
-
-  // render bullets
-  for (var i = 0; i < this.bullets.length; i++) {
-    this.bullets[i].render(p);
-    this.bullets[i].update(p);
-  }
-
-  p.push();
-  // 坦克的body
-  p.translate(this.x, this.y);
-  p.rotate(this.direction);
-  p.fill(255, 204, 0);
-  p.rect(-this.tankWidth / 2, -this.tankHeight / 2, this.tankWidth, this.tankHeight, this.borderRadius);
-  //坦克的炮台
-  p.fill(153, 204, 0);
-  p.rect(-this.gunturretWidth / 2, -this.gunturretHeight / 2, this.gunturretWidth, this.gunturretHeight, this.borderRadius);
-  // 坦克的大炮
-  p.fill(255, 255, 255);
-  p.rect(-this.cannonDiameter / 2, -this.gunturretHeight / 2 - this.cannonHeight, this.cannonDiameter, this.cannonHeight);
-
-  p.pop();
-};
-
-var EnemyTank = function (min, x_max, y_max) {
-  Tank.call(this);
-  this.edge_min = min;
-  this.edge_x_max = x_max;
-  this.edge_y_max = y_max;
-  this.speed = 1;
-  this.bullet = '';
-  this.bulletsDistance = 60;
-  this.bulletsCount = 5;
-  this.color = 'hsba(160, 100%, 50%, 0.5)';
-};
-
-EnemyTank.prototype = new Tank();
-
-EnemyTank.prototype.autoMove = function (p) {
-  this.render(p);
-  this.autoUpdate(p);
-};
-
-EnemyTank.prototype.autoUpdate = function (p) {
-  this.goForward();
-  if (this.isEdges()) {
-    this.findDirection();
-  }
-};
-
-EnemyTank.prototype.setLocationAndDirection = function (x, y, direction) {
-  this.setLocation(x, y);
-  this.setDirection(direction);
-};
-
-EnemyTank.prototype.createRandom = function (x, y) {
-  var dir = this.getRandomDirection();
-  this.setLocationAndDirection(x, y, dir);
-};
-
-EnemyTank.prototype.getRandomDirection = function () {
-  var dirs = [];
-  for (var key in _const.Direction) {
-    dirs.push(key);
-  }
-  var i = Math.floor(_util2.default.randomRange(0, dirs.length));
-  return _const.Direction[dirs[i]];
-};
-
-EnemyTank.prototype.isEdges = function () {
-  if (this.x <= this.edge_min || this.x >= this.edge_x_max || this.y <= this.edge_min || this.y >= this.edge_y_max) {
-    return true;
-  }
-  return false;
-};
-
-EnemyTank.prototype.render = function (p) {
-  // render bullets
-  for (var i = 0; i < this.bullets.length; i++) {
-    this.bullets[i].render(p);
-    this.bullets[i].update(p);
-  }
-
-  p.push();
-  // 坦克的body
-
-  p.fill(p.color(this.color));
-
-  p.translate(this.x, this.y);
-  p.rotate(this.direction);
-
-  p.rect(-this.tankWidth / 2, -this.tankHeight / 2, this.tankWidth, this.tankHeight, this.borderRadius);
-  //坦克的炮台
-
-  p.rect(-this.gunturretWidth / 2, -this.gunturretHeight / 2, this.gunturretWidth, this.gunturretHeight, this.borderRadius);
-  // 坦克的大炮
-  p.rect(-this.cannonDiameter / 2, -this.gunturretHeight / 2 - this.cannonHeight, this.cannonDiameter, this.cannonHeight);
-  p.pop();
-};
-
-EnemyTank.prototype.setColor = function (color) {
-  this.color = color;
-};
-EnemyTank.prototype.goForward = function (rate) {
-  if (arguments.length === 0) {
-    var rate = 1;
-  }
-
-  switch (this.direction) {
-    case _const.Direction.UP:
-      this.y -= this.speed * rate;
-      break;
-    case _const.Direction.DOWN:
-      this.y += this.speed * rate;
-      break;
-    case _const.Direction.LEFT:
-      this.x -= this.speed * rate;
-      break;
-    case _const.Direction.RIGHT:
-      this.x += this.speed * rate;
-      break;
-    default:
-      this.y += this.speed * rate;
-  }
-};
-
-EnemyTank.prototype.findDirection = function () {
-
-  for (var dir in _const.Direction) {
-    if (this.direction === _const.Direction[dir]) continue;
-    this.setDirection(_const.Direction[dir]);
-    this.goForward();
-    if (!this.isEdges()) {
-      this.goForward(-1);
-      break;
-    }
-    this.goForward(-1);
-  }
-};
-
-EnemyTank.prototype.changeDirctionWhenCollision = function () {
-  this.setDirection(this.direction + Math.PI);
-};
-
-EnemyTank.prototype.initBullets = function (dir) {
-  // this.bullets.push(new Bullet(this.x,this.y,this.direction));
-  this.bullet = new _bullet2.default(this.x, this.y, this.direction);
-};
-
-EnemyTank.prototype.bulletsRender = function (p) {
-  this.bullet.render(p);
-  if (this.bullet.x <= 0 || this.bullet.x >= this.edge_x_max || this.bullet.y >= this.edge_y_max || this.bullet.y <= 0) {
-    this.bullet.setLocation(this.x, this.y);
-    this.bullet.setDirection(this.direction);
-  }
-  this.bullet.update();
-};
 
 var TankGame = function (p) {
   const EDGE_MIN = 40;
@@ -33465,11 +33501,11 @@ var TankGame = function (p) {
     p.createCanvas(800, 640);
     p.background(224);
     p.fill(255, 204, 0);
-    tank = new Tank();
+    tank = new _tank2.default();
     tank.setLocation(p.width / 2, p.height - 60);
 
     for (var i = 0; i < enemyTankCounts; i++) {
-      enemyTank[i] = new EnemyTank(EDGE_MIN, p.width - EDGE_MIN, p.height - EDGE_MIN);
+      enemyTank[i] = new _npcTank2.default(EDGE_MIN, p.width - EDGE_MIN, p.height - EDGE_MIN);
       enemyTank[i].createRandom(_util2.default.randomRange(EDGE_MIN, p.width), _util2.default.randomRange(EDGE_MIN, p.height - EDGE_MIN));
       enemyTank[i].initBullets();
     }
@@ -33575,7 +33611,7 @@ var TankGame = function (p) {
   }
   function addEnemyTank() {
     if (enemyTank.length < enemyTankCounts) {
-      enemyTank.push(new EnemyTank(EDGE_MIN, p.width - EDGE_MIN, p.height - EDGE_MIN));
+      enemyTank.push(new _npcTank2.default(EDGE_MIN, p.width - EDGE_MIN, p.height - EDGE_MIN));
       enemyTank[enemyTank.length - 1].createRandom(_util2.default.randomRange(EDGE_MIN, p.width), _util2.default.randomRange(EDGE_MIN, p.height - EDGE_MIN));
       enemyTank[enemyTank.length - 1].initBullets();
     }
@@ -33592,8 +33628,9 @@ var TankGame = function (p) {
     }
   }
 };
-module.exports = TankGame;
-},{"./util.js":8,"./const.js":15,"./img/heart.png":9,"./bullet.js":16}],4:[function(require,module,exports) {
+
+exports.default = TankGame;
+},{"./util.js":8,"./const.js":15,"./bullet.js":16,"./tank.js":17,"./npc-tank.js":18,"./img/heart.png":9}],4:[function(require,module,exports) {
 "use strict";
 
 var _p = require("p5");
@@ -33606,7 +33643,8 @@ var _tankGame2 = _interopRequireDefault(_tankGame);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-new _p2.default(_tankGame2.default);
+let test = new _p2.default(_tankGame2.default);
+console.log('test', test);
 },{"p5":12,"./tank-game.js":14}],0:[function(require,module,exports) {
 var global = (1, eval)('this');
 var OldModule = module.bundle.Module;
