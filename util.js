@@ -1,8 +1,8 @@
-var Util = function(){
 
-}
-
-Util.randomRange = function(min,max){
+function randomRange (min,max){
   return Math.random()*(max - min) + min;
 }
-module.exports = Util;
+
+export default {
+  randomRange
+};

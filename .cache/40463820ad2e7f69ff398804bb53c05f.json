@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\n\nfunction randomRange(min, max) {\n  return Math.random() * (max - min) + min;\n}\n\nexports.default = {\n  randomRange\n};"},"hash":"4d310db2a9a8289cb9912f3e78c3be44"}
